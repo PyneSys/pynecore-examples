@@ -7,13 +7,14 @@ Each example is a self-contained project. Just `cd` into a directory and run it.
 
 ## Examples
 
-| #  | Directory                                  | Description                                          |
-|----|--------------------------------------------|------------------------------------------------------|
-| 01 | [`01-standalone/`](01-standalone/)         | Run a script on a CSV file — zero code, one command  |
-| 02 | [`02-programmatic/`](02-programmatic/)     | ScriptRunner API — read outputs, override inputs     |
-| 03 | [`03-custom-data/`](03-custom-data/)       | Feed OHLCV from any source (API, DB, DataFrame)      |
-| 04 | [`04-live-ccxt/`](04-live-ccxt/)           | Live exchange data with CCXT (no API key needed)     |
-| 05 | [`05-freqtrade/`](05-freqtrade/)           | FreqTrade integration for live trading *(WIP)*       |
+| #  | Directory                                                | Description                                         |
+|----|----------------------------------------------------------|-----------------------------------------------------|
+| 01 | [`01-standalone/`](01-standalone/)                       | Run a script on a CSV file — zero code, one command |
+| 02 | [`02-programmatic/`](02-programmatic/)                   | ScriptRunner API — read outputs, override inputs    |
+| 03 | [`03-custom-data/`](03-custom-data/)                     | Feed OHLCV from any source (API, DB, DataFrame)     |
+| 04 | [`04-live-ccxt/`](04-live-ccxt/)                         | Live exchange data with CCXT (no API key needed)    |
+| 05 | [`05-freqtrade-indicators/`](05-freqtrade-indicators/)   | FreqTrade + PyneCore indicators as data sources     |
+| 06 | [`06-freqtrade-strategy/`](06-freqtrade-strategy/)       | FreqTrade + PyneCore strategy signals               |
 
 ## Quick Start
 
