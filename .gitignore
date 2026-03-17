@@ -1,0 +1,46 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+venv/
+.venv/
+
+# PyPI configuration file
+.pypirc
+
+# Working directory (PyneCore data)
+workdir/
+
+# Pytest cache
+.pytest_cache/
+
+# dist directory
+dist/
+
+# macOS
+.DS_Store
+
+# Editors + AI
+.idea/
+.vscode/
+.cursor/
+.windsurf/
+.claude/
+.mcp.json
+CLAUDE.md
+MEMORY.md
+
+# PyneCore output files
+*.ohlcv
+*.toml
+*_plot.csv
+*_trades.csv
+*_strat.csv
+*.extra.csv
+
+# Temporary files
+*.tmp
+*.bak
