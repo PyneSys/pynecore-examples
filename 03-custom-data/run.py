@@ -106,14 +106,13 @@ print(f"Running RSI on {len(candles)} custom-generated BTCUSD candles\n")
 for i, (candle, plot_data) in enumerate(runner.run_iter()):
     rsi = plot_data.get("RSI")
 
-    if rsi is not None and rsi == rsi:  # skip NaN
-        signal = ""
-        if rsi > 70:
-            signal = " <-- OVERBOUGHT"
-        elif rsi < 30:
-            signal = " <-- OVERSOLD"
+    signal = ""
+    if rsi > 70:
+        signal = " <-- OVERBOUGHT"
+    elif rsi < 30:
+        signal = " <-- OVERSOLD"
 
-        if signal or i % 20 == 0:
-            print(f"Bar {i:>4}  Close={candle.close:>10.2f}  RSI={rsi:>6.2f}{signal}")
+    if signal or i % 20 == 0:
+        print(f"Bar {i:>4}  Close={candle.close:>10.2f}  RSI={rsi:>6.2f}{signal}")
 
 print("\nDone.")

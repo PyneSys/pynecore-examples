@@ -87,18 +87,15 @@ for i, row in df.iterrows():
     bb_upper = row.get("bb_upper")
     close = row["close"]
 
-    if rsi is None or rsi != rsi:  # skip NaN / warmup
-        continue
-
     signal = ""
 
     # Your custom logic: RSI oversold + price near lower BB = buy signal
-    if rsi < 30 and bb_lower is not None and bb_lower == bb_lower and close <= bb_lower * 1.02:
+    if rsi < 30 and close <= bb_lower * 1.02:
         signal = "BUY"
         buy_signals += 1
 
     # RSI overbought + price near upper BB = sell signal
-    elif rsi > 70 and bb_upper is not None and bb_upper == bb_upper and close >= bb_upper * 0.98:
+    elif rsi > 70 and close >= bb_upper * 0.98:
         signal = "SELL"
         sell_signals += 1
 

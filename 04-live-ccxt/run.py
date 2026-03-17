@@ -124,15 +124,14 @@ print(f"\nRunning RSI on {SYMBOL} ({EXCHANGE})\n")
 for i, (candle, plot_data) in enumerate(runner.run_iter()):
     rsi = plot_data.get("RSI")
 
-    if rsi is not None and rsi == rsi:
-        signal = ""
-        if rsi > 70:
-            signal = " >>> OVERBOUGHT"
-        elif rsi < 30:
-            signal = " >>> OVERSOLD"
+    signal = ""
+    if rsi > 70:
+        signal = " >>> OVERBOUGHT"
+    elif rsi < 30:
+        signal = " >>> OVERSOLD"
 
-        # Print the last few historical bars + all live bars
-        if i >= HISTORY_BARS - 5 or signal:
-            print(f"Bar {i:>4}  Close={candle.close:>10.2f}  RSI={rsi:>6.2f}{signal}")
+    # Print the last few historical bars + all live bars
+    if i >= HISTORY_BARS - 5 or signal:
+        print(f"Bar {i:>4}  Close={candle.close:>10.2f}  RSI={rsi:>6.2f}{signal}")
 
 print("\nDone.")
