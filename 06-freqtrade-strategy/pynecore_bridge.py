@@ -72,6 +72,7 @@ def create_syminfo(pair: str = "BTC/USDT", timeframe: str = "1h") -> SymInfo:
         pricescale=100,
         minmove=1,
         pointvalue=1.0,
+        mincontract=0.00001 if base == "BTC" else 0.0001,
         timezone="UTC",
         volumetype="base",
         opening_hours=[],
