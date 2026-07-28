@@ -12,7 +12,7 @@ uv run run.py
 ## What You'll Learn
 
 - **Create OHLCV objects** — `OHLCV(timestamp, open, high, low, close, volume)`
-  - `timestamp` is in **seconds** (Unix epoch)
+  - `timestamp` is in **milliseconds** (Unix epoch)
 - **Build SymInfo manually** — no TOML file needed; just set ticker, currency, mintick, etc.
 - **Use any data source** — the `ohlcv_iter` parameter accepts any `Iterable[OHLCV]`
 
@@ -35,7 +35,7 @@ def fetch_from_api():
 def from_dataframe(df):
     for _, row in df.iterrows():
         yield OHLCV(
-            timestamp=int(row["timestamp"].timestamp()),
+            timestamp=int(row["timestamp"].timestamp() * 1000),
             open=row["open"], high=row["high"], low=row["low"], close=row["close"],
             volume=row["volume"],
         )

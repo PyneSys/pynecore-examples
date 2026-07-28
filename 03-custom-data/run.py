@@ -40,7 +40,7 @@ def generate_candles() -> list[OHLCV]:
 
     candles = []
     base_price = 42000.0
-    base_time = 1704067200  # 2024-01-01 00:00:00 UTC in seconds
+    base_time = 1704067200000  # 2024-01-01 00:00:00 UTC in milliseconds
 
     for i in range(200):
         # Generate a realistic-looking price series
@@ -52,7 +52,7 @@ def generate_candles() -> list[OHLCV]:
         spread = abs(noise) + 50
 
         candles.append(OHLCV(
-            timestamp=base_time + i * 3600,  # 1 hour = 3600 seconds
+            timestamp=base_time + i * 3_600_000,  # 1 hour = 3_600_000 milliseconds
             open=mid - spread * 0.3,
             high=mid + spread * 0.5,
             low=mid - spread * 0.5,

@@ -31,14 +31,16 @@ def dataframe_to_ohlcv(dataframe: pd.DataFrame) -> list[OHLCV]:
     Convert a FreqTrade-style DataFrame to a list of PyneCore OHLCV objects.
 
     Expects columns: open, high, low, close, volume.
-    Index should be a DatetimeIndex (timezone-aware or naive).
+    Index should be a DatetimeIndex (timezone-aware or naive); a plain numeric
+    index is taken as Unix milliseconds, the unit PyneCore OHLCV uses.
 
     :param dataframe: OHLCV DataFrame
     :return: List of OHLCV namedtuples
     """
     ohlcv_list = []
     for row in dataframe.itertuples():
-        ts = int(row.Index.timestamp()) if hasattr(row.Index, "timestamp") else int(row.Index)
+        ts = (int(row.Index.timestamp() * 1000) if hasattr(row.Index, "timestamp")
+              else int(row.Index))
         ohlcv_list.append(OHLCV(
             timestamp=ts,
             open=float(row.open),

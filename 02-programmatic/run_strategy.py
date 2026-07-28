@@ -15,7 +15,7 @@ This example shows how to:
 
 from pathlib import Path
 from pynecore.core.data_converter import DataConverter
-from pynecore.core.ohlcv_file import OHLCVReader
+from pynecore.core.ohlcv import OHLCVReader
 from pynecore.core.script_runner import ScriptRunner
 from pynecore.core.syminfo import SymInfo
 

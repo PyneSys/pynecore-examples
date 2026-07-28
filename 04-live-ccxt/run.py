@@ -46,7 +46,7 @@ def fetch_ohlcv(exchange: ccxt.Exchange, symbol: str, timeframe: str,
     raw = exchange.fetch_ohlcv(symbol, timeframe, limit=limit)
     return [
         OHLCV(
-            timestamp=bar[0] // 1000,  # CCXT returns ms, PyneCore expects seconds
+            timestamp=bar[0],  # CCXT and PyneCore both use milliseconds
             open=bar[1],
             high=bar[2],
             low=bar[3],

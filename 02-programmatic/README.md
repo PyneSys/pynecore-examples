@@ -34,7 +34,7 @@ uv run run_strategy.py
 ```python
 from pynecore.core.script_runner import ScriptRunner
 from pynecore.core.syminfo import SymInfo
-from pynecore.core.ohlcv_file import OHLCVReader
+from pynecore.core.ohlcv import OHLCVReader
 from pynecore.core.data_converter import DataConverter
 
 # Convert CSV once
