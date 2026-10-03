@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["pynesys-pynecore[cli]", "pandas"]
+# dependencies = ["pynesys-pynecore[cli]>=6.10.6", "pandas"]
 # ///
 
 """
@@ -61,12 +61,15 @@ df = generate_btc_data(500)
 
 print("Running SMA Crossover strategy on 500 BTC/USDT candles...\n")
 
-indicators, trades = run_strategy(
+indicators, trades, open_trades = run_strategy(
     df,
     SCRIPT,
     pair="BTC/USDT",
     timeframe="1h",
-    inputs={"Length": 20, "Confirm bars": 2},
+    inputs={"length": 20, "confirmBars": 2},  # keyed by the script's main() parameter names
+    # 10% of equity per entry instead of Pine's default 100%, which leaves no room for
+    # adverse moves (margin calls)
+    settings={"default_qty_type": "percent_of_equity", "default_qty_value": 10},
 )
 
 # Print trades (first 10 + last 5 if there are many)
@@ -99,6 +102,10 @@ if trades:
     print(f"Losers:       {len(losses)} ({len(losses) / len(trades) * 100:.1f}%)")
     print(f"Total P&L:    {total_pnl:+.2f}")
 else:
-    print("\nNo trades executed.")
+    print("\nNo trades closed.")
+
+for trade in open_trades:
+    direction = "LONG" if trade.size > 0 else "SHORT"
+    print(f"Open:         {direction} since bar {trade.entry_bar_index} at {trade.entry_price:.2f}")
 
 print("\nDone.")

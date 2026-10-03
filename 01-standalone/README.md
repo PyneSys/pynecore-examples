@@ -21,9 +21,14 @@ python sma_crossover.py data/EURUSD_1h.csv
 1. The CSV is automatically converted to PyneCore's binary OHLCV format (in a temp directory)
 2. The script runs bar-by-bar, just like on TradingView
 3. Output CSV files are created next to the script:
-   - `bollinger_bands_plot.csv` — indicator values for each bar
+   - `bollinger_bands.csv` / `sma_crossover.csv` — plotted values for each bar
    - `sma_crossover_trades.csv` — executed trades (for strategies)
    - `sma_crossover_strat.csv` — strategy performance summary
+
+The SMA crossover strategy declares no position size, so it trades with Pine Script v6's default:
+100% of equity per entry. With no room for adverse moves, some positions get cut by margin calls
+(`Margin call` rows in the trades file). [02-programmatic](../02-programmatic/) runs the same
+strategy with a different size, set from Python.
 
 ## Scripts
 

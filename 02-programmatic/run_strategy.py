@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["pynesys-pynecore[cli]"]
+# dependencies = ["pynesys-pynecore[cli]>=6.10.6"]
 # ///
 
 """
@@ -9,7 +9,7 @@ Run a PyneCore strategy programmatically and process trade results in Python.
 This example shows how to:
   - Run a strategy with ScriptRunner
   - Capture closed trades as they happen
-  - Override script input parameters at runtime
+  - Override script input parameters and strategy settings at runtime
   - Calculate custom statistics from trade results
 """
 
@@ -37,12 +37,15 @@ with OHLCVReader(ohlcv_path) as reader:
         script_path=SCRIPT,
         ohlcv_iter=reader.read_from(reader.start_timestamp, reader.end_timestamp),
         syminfo=syminfo,
-        # Override script inputs at runtime — no need to edit the script file
-        inputs={"Length": 15, "Confirm bars": 2},
+        # Override script inputs at runtime — keyed by the main() parameter names
+        inputs={"length": 15, "confirmBars": 2},
+        # Override the strategy's own settings: trade 10% of equity per entry instead of
+        # Pine's default 100%, which leaves no room for adverse moves (margin calls)
+        settings={"default_qty_type": "percent_of_equity", "default_qty_value": 10},
     )
 
     print(f"Running SMA Crossover on {syminfo.ticker} ({reader.size} bars)")
-    print(f"Inputs: Length=15, Confirm bars=2\n")
+    print(f"Inputs: length=15, confirmBars=2; size: 10% of equity\n")
 
     # Strategies yield a third element: list of newly closed trades
     all_trades = []

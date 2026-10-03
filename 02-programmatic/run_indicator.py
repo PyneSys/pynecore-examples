@@ -18,6 +18,7 @@ from pynecore.core.data_converter import DataConverter
 from pynecore.core.ohlcv import OHLCVReader
 from pynecore.core.script_runner import ScriptRunner
 from pynecore.core.syminfo import SymInfo
+from pynecore.lib import na
 
 # Paths
 SCRIPT = Path(__file__).parent / "scripts" / "bollinger_bands.py"
@@ -51,15 +52,15 @@ with OHLCVReader(ohlcv_path) as reader:
         upper = plot_data.get("Upper")
         lower = plot_data.get("Lower")
 
-        # Indicator values are NaN during warmup (first `length` bars)
-        if basis is not None and basis == basis:  # NaN check: NaN != NaN
+        # Indicator values are na during warmup (the first `length` - 1 bars)
+        if not na(basis):
             print(f"{i:>5}  {candle.close:>10.5f}  {basis:>10.5f}  {upper:>10.5f}  {lower:>10.5f}")
 
             # Example: detect price touching the lower band
             if candle.close <= lower:
                 print(f"       ^^^ Price at lower band — potential buy signal")
 
-        # Only print first 50 valid bars for this demo
+        # Stop after the first ~50 values for this demo
         if i > 70:
             print(f"\n... ({reader.size - i - 1} more bars)")
             break

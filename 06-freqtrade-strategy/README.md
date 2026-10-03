@@ -28,7 +28,7 @@ Generates 500 bars, runs the SMA Crossover strategy, and prints every trade with
 2. Add PyneCore to your FreqTrade environment:
 
    ```bash
-   pip install pynesys-pynecore
+   pip install "pynesys-pynecore>=6.10.6"
    ```
 
 3. Run a backtest:
@@ -46,12 +46,13 @@ FreqTrade DataFrame (pandas)
   pynecore_bridge.py
   └── run_strategy()    →  Run Pine Script strategy on all bars
         │
-        ├── indicators  →  Plot data (SMA values, etc.)
-        └── trades      →  List of closed trades with bar indices
+        ├── indicators   →  Plot data (SMA values, etc.)
+        ├── trades       →  Closed trades with bar indices
+        └── open_trades  →  The position the strategy holds now
               │
               ▼
-  Convert trade.entry_bar_index → enter_long[i] = 1
-  Convert trade.exit_bar_index  → exit_long[i] = 1
+  Convert trade.entry_bar_index → enter_long[i] / enter_short[i] = 1
+  Convert trade.exit_bar_index  → exit_long[i] / exit_short[i] = 1
         │
         ▼
   FreqTrade executes the signals
@@ -62,17 +63,21 @@ FreqTrade DataFrame (pandas)
 1. Compile your TradingView strategy with PyneComp (or write one by hand)
 2. Place the `.py` file in `scripts/`
 3. Update `SCRIPT` path in `strategy.py`
-4. Adjust `inputs={}` to match your strategy's `input()` parameters
+4. Set `INPUTS` in `strategy.py` to your strategy's input values, keyed by the `main()` parameter
+   names (not the input titles); an unknown key raises `ValueError`
+5. Keep `"process_orders_on_close": True` in `SETTINGS`, so a trade's entry and exit bar is the bar
+   that generated the signal, and size the entries there (`default_qty_type`,
+   `default_qty_value`) instead of relying on Pine's 100%-of-equity default
 
 ## Performance Tip
 
-FreqTrade calls `populate_indicators()` on every new candle with the full DataFrame. The simple
-approach in this example re-runs the entire strategy each time — fine for hourly timeframes, but
-wasteful for lower ones.
+FreqTrade calls `populate_indicators()` once per new candle (`process_only_new_candles`, on by
+default) with the full DataFrame, and this example re-runs the whole strategy on it. Keep it that
+way: the strategy's position, equity and every indicator it uses depend on all earlier bars, so
+running only the new bars would produce different trades.
 
-For production use, **cache the trade signals** in the strategy: store the entry/exit bar indices
-from previous runs, and only re-run PyneCore when new bars arrive. This makes the integration
-essentially zero-cost after the initial warmup.
+A full re-run is cheap. On a laptop a script takes a few milliseconds for 1,000 bars and a few tens
+of milliseconds for 5,000 bars, far below a candle's duration even on `1m`.
 
 ## Indicator vs Strategy — Which to Use?
 

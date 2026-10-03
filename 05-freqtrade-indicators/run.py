@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["pynesys-pynecore[cli]", "pandas"]
+# dependencies = ["pynesys-pynecore[cli]>=6.10.6", "pandas"]
 # ///
 
 """

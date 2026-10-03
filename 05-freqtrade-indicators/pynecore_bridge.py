@@ -5,7 +5,7 @@ Provides helper functions to:
   - Convert a pandas DataFrame to PyneCore OHLCV objects
   - Build a SymInfo for crypto pairs
   - Run PyneCore indicator scripts on a DataFrame
-  - Run PyneCore strategy scripts and capture trades
+  - Run PyneCore strategy scripts and capture their trades
 """
 
 from pathlib import Path
@@ -30,19 +30,29 @@ def dataframe_to_ohlcv(dataframe: pd.DataFrame) -> list[OHLCV]:
     """
     Convert a FreqTrade-style DataFrame to a list of PyneCore OHLCV objects.
 
-    Expects columns: open, high, low, close, volume.
-    Index should be a DatetimeIndex (timezone-aware or naive); a plain numeric
-    index is taken as Unix milliseconds, the unit PyneCore OHLCV uses.
+    Expects columns: open, high, low, close, volume. The candle times come from the
+    ``date`` column, where FreqTrade keeps them, or else from a DatetimeIndex. Naive
+    times are taken as UTC.
 
     :param dataframe: OHLCV DataFrame
     :return: List of OHLCV namedtuples
+    :raises ValueError: If the DataFrame has neither a ``date`` column nor a DatetimeIndex
     """
+    if "date" in dataframe.columns:
+        dates = pd.DatetimeIndex(dataframe["date"])
+    elif isinstance(dataframe.index, pd.DatetimeIndex):
+        dates = dataframe.index
+    else:
+        raise ValueError("The DataFrame needs a 'date' column or a DatetimeIndex")
+    if dates.tz is None:
+        dates = dates.tz_localize("UTC")
+    # Unix milliseconds, the unit PyneCore OHLCV uses
+    timestamps = (dates - pd.Timestamp(0, tz="UTC")) // pd.Timedelta(milliseconds=1)
+
     ohlcv_list = []
-    for row in dataframe.itertuples():
-        ts = (int(row.Index.timestamp() * 1000) if hasattr(row.Index, "timestamp")
-              else int(row.Index))
+    for ts, row in zip(timestamps, dataframe.itertuples()):
         ohlcv_list.append(OHLCV(
-            timestamp=ts,
+            timestamp=int(ts),
             open=float(row.open),
             high=float(row.high),
             low=float(row.low),
@@ -89,6 +99,7 @@ def run_indicator(
     pair: str = "BTC/USDT",
     timeframe: str = "1h",
     inputs: dict[str, Any] | None = None,
+    settings: dict[str, Any] | None = None,
 ) -> dict[str, pd.Series]:
     """
     Run a PyneCore indicator script on a FreqTrade DataFrame.
@@ -100,7 +111,9 @@ def run_indicator(
     :param script_path: Path to a compiled PyneCore indicator script
     :param pair: Trading pair
     :param timeframe: FreqTrade timeframe string
-    :param inputs: Optional dict to override script input() defaults
+    :param inputs: Optional dict to override script input() values, keyed by the
+                   main() parameter names
+    :param settings: Optional dict to override the script's own settings
     :return: Dict mapping plot title → pd.Series of values
     """
     ohlcv_data = dataframe_to_ohlcv(dataframe)
@@ -111,6 +124,7 @@ def run_indicator(
         ohlcv_iter=ohlcv_data,
         syminfo=syminfo,
         inputs=inputs,
+        settings=settings,
     )
 
     results: dict[str, list] = {}
@@ -130,19 +144,25 @@ def run_strategy(
     pair: str = "BTC/USDT",
     timeframe: str = "1h",
     inputs: dict[str, Any] | None = None,
-) -> tuple[dict[str, pd.Series], list]:
+    settings: dict[str, Any] | None = None,
+) -> tuple[dict[str, pd.Series], list, list]:
     """
     Run a PyneCore strategy script on a FreqTrade DataFrame.
 
-    Returns indicator values AND closed trades. Strategies yield a 3-tuple
-    (candle, plot_data, new_trades) from run_iter().
+    Returns indicator values, the closed trades AND the trades still open after the
+    last bar. Strategies yield a 3-tuple (candle, plot_data, new_trades) from
+    run_iter(), where new_trades are the trades closed on that bar; the open ones are
+    read from the strategy's position once the run is over.
 
     :param dataframe: OHLCV DataFrame
     :param script_path: Path to a compiled PyneCore strategy script
     :param pair: Trading pair
     :param timeframe: FreqTrade timeframe string
-    :param inputs: Optional dict to override script input() defaults
-    :return: Tuple of (indicator_dict, list_of_closed_trades)
+    :param inputs: Optional dict to override script input() values, keyed by the
+                   main() parameter names
+    :param settings: Optional dict to override the strategy's own settings
+                     (sizing, capital, commission, process_orders_on_close, ...)
+    :return: Tuple of (indicator_dict, closed_trades, open_trades)
     """
     ohlcv_data = dataframe_to_ohlcv(dataframe)
     syminfo = create_syminfo(pair, timeframe)
@@ -152,6 +172,7 @@ def run_strategy(
         ohlcv_iter=ohlcv_data,
         syminfo=syminfo,
         inputs=inputs,
+        settings=settings,
     )
 
     results: dict[str, list] = {}
@@ -166,4 +187,4 @@ def run_strategy(
         key: pd.Series(values, index=dataframe.index[:len(values)])
         for key, values in results.items()
     }
-    return indicators, all_trades
+    return indicators, all_trades, list(runner.script.position.open_trades)

@@ -13,13 +13,15 @@ This example shows how to:
   - Process indicator output in real time
 """
 
+import math
+import random
 from pathlib import Path
 from pynecore.core.script_runner import ScriptRunner
 from pynecore.core.syminfo import SymInfo
 from pynecore.types.ohlcv import OHLCV
 
 
-# -- Example script (inline for simplicity) ----------------------------------
+# -- The indicator script to run ----------------------------------------------
 
 SCRIPT = Path(__file__).parent / "simple_rsi.py"
 
@@ -36,8 +38,7 @@ def generate_candles() -> list[OHLCV]:
       - A websocket stream
       - A pandas DataFrame
     """
-    import math
-
+    rng = random.Random(42)  # seeded: the same candles on every run
     candles = []
     base_price = 42000.0
     base_time = 1704067200000  # 2024-01-01 00:00:00 UTC in milliseconds
@@ -46,7 +47,7 @@ def generate_candles() -> list[OHLCV]:
         # Generate a realistic-looking price series
         trend = i * 5.0
         cycle = math.sin(i / 20.0) * 200
-        noise = (hash(f"seed_{i}") % 100 - 50) * 2.0
+        noise = rng.uniform(-100.0, 100.0)
 
         mid = base_price + trend + cycle + noise
         spread = abs(noise) + 50

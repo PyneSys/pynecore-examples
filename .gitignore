@@ -40,6 +40,8 @@ MEMORY.md
 *_trades.csv
 *_strat.csv
 *.extra.csv
+# Plot CSVs the standalone scripts write next to themselves (data/ is not matched)
+01-standalone/*.csv
 
 # Temporary files
 *.tmp

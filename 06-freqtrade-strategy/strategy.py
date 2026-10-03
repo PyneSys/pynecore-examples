@@ -3,7 +3,7 @@ FreqTrade strategy that uses PyneCore strategy signals directly.
 
 The Pine Script strategy (SMA Crossover) generates entry/exit decisions via
 strategy.entry() and strategy.close(). This FreqTrade wrapper converts those
-trade signals into enter_long / exit_long DataFrame columns.
+trades into enter_long/short and exit_long/short DataFrame columns.
 
 Drop this file into FreqTrade's user_data/strategies/ directory.
 Copy pynecore_bridge.py and the scripts/ folder alongside it.
@@ -24,6 +24,21 @@ except ImportError:
 from pynecore_bridge import run_strategy
 
 SCRIPT = Path(__file__).parent / "scripts" / "sma_crossover.py"
+
+# The script's input values, keyed by its main() parameter names
+INPUTS = {"length": 12, "confirmBars": 1}
+
+# The strategy's own settings, overridden for this integration:
+# - 10% of equity per entry instead of Pine's default 100%, which leaves no room for
+#   adverse moves (margin calls)
+# - process_orders_on_close: an order fills on the close of the bar that placed it, so a
+#   trade's entry/exit bar IS the signal bar. Without it Pine fills at the NEXT bar's open,
+#   and a signal on the newest candle would only show up one candle later.
+SETTINGS = {
+    "default_qty_type": "percent_of_equity",
+    "default_qty_value": 10,
+    "process_orders_on_close": True,
+}
 
 
 class PyneStrategySignals(IStrategy):
@@ -49,35 +64,31 @@ class PyneStrategySignals(IStrategy):
     ) -> pd.DataFrame:
         pair = metadata.get("pair", "BTC/USDT")
 
-        _indicators, trades = run_strategy(
+        _indicators, closed_trades, open_trades = run_strategy(
             dataframe,
             SCRIPT,
             pair=pair,
             timeframe=self.timeframe,
-            inputs={"Length": 12, "Confirm bars": 1},
+            inputs=INPUTS,
+            settings=SETTINGS,
         )
 
-        # Convert PyneCore trades into bar-level entry/exit signals
+        # Convert PyneCore trades into bar-level entry/exit signals. FreqTrade acts on a
+        # signal at the next candle's open. The open trades matter most when trading live:
+        # the position the strategy holds right now is not closed yet.
         dataframe["pyne_enter_long"] = 0
         dataframe["pyne_enter_short"] = 0
         dataframe["pyne_exit_long"] = 0
         dataframe["pyne_exit_short"] = 0
 
-        for trade in trades:
-            entry_idx = trade.entry_bar_index
-            exit_idx = trade.exit_bar_index
+        def mark(bar_index: int, column: str) -> None:
+            if bar_index < len(dataframe):
+                dataframe.iloc[bar_index, dataframe.columns.get_loc(column)] = 1
 
-            if entry_idx < len(dataframe):
-                if trade.size > 0:
-                    dataframe.iloc[entry_idx, dataframe.columns.get_loc("pyne_enter_long")] = 1
-                else:
-                    dataframe.iloc[entry_idx, dataframe.columns.get_loc("pyne_enter_short")] = 1
-
-            if exit_idx < len(dataframe):
-                if trade.size > 0:
-                    dataframe.iloc[exit_idx, dataframe.columns.get_loc("pyne_exit_long")] = 1
-                else:
-                    dataframe.iloc[exit_idx, dataframe.columns.get_loc("pyne_exit_short")] = 1
+        for trade in closed_trades + open_trades:
+            mark(trade.entry_bar_index, "pyne_enter_long" if trade.size > 0 else "pyne_enter_short")
+        for trade in closed_trades:
+            mark(trade.exit_bar_index, "pyne_exit_long" if trade.size > 0 else "pyne_exit_short")
 
         return dataframe
 

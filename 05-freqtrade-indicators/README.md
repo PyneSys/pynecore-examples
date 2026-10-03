@@ -30,7 +30,7 @@ Generates 500 BTC/USDT candles, runs RSI + Bollinger Bands, and prints combined 
 2. Add PyneCore to your FreqTrade environment:
 
    ```bash
-   pip install pynesys-pynecore
+   pip install "pynesys-pynecore>=6.10.6"
    ```
 
 3. Run a backtest:
@@ -76,11 +76,11 @@ FreqTrade DataFrame (pandas)
 
 ## Performance Tip
 
-FreqTrade calls `populate_indicators()` on every new candle with the full DataFrame. The simple
-approach in this example re-runs PyneCore on all bars each time — which is fine for hourly
-timeframes (~200 bars takes a few milliseconds).
+FreqTrade calls `populate_indicators()` once per new candle (`process_only_new_candles`, on by
+default) with the full DataFrame, and this example re-runs PyneCore on all of its bars. That is the
+right approach: a Pine Script indicator carries state from bar to bar (moving averages, `ta.rsi`,
+`var` variables), so its value on the newest bar depends on every bar before it. Running only the
+new bars would start that state from scratch and give different values.
 
-For lower timeframes or many indicators, you can **cache results** in the strategy: store computed
-indicator values keyed by bar timestamp, and only run PyneCore on new bars. The cached values
-get returned instantly, and only the latest candle triggers actual computation. This makes the
-integration essentially zero-cost after the initial warmup.
+A full re-run is cheap. On a laptop one indicator takes a few milliseconds for 1,000 bars and a few
+tens of milliseconds for 5,000 bars, far below a candle's duration even on `1m`.
